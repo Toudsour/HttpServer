@@ -39,12 +39,6 @@ int CreateServer(int& host)
 }
 
 
-
-
-
-
-
-
 int  GetRequest(int client_socket, char * buf,size_t max_len)
 {
     ssize_t num_bytes=0;
@@ -59,67 +53,10 @@ int  GetRequest(int client_socket, char * buf,size_t max_len)
             return -2;
     }
     buf[num_bytes_recv]='\0';
-    //printf("%s",buf);
+    printf("%s",buf);
     return 0;
 }
 
-
-char * GetRequestMethod(char ** http_request)
-{
-    char * buf=*http_request;
-    char * method=buf;
-    while(*buf&&!isspace(*buf))
-        buf++;
-    *buf='\0';
-    *http_request=buf+1;
-    return method;
-}
-
-
-char * GetRequestUrl(char ** http_request)
-{
-
-    char * buf=*http_request;
-    while(*buf&&(isspace(*buf)))
-        buf++;
-    char * url= buf;
-    while(*buf&&(!isspace(*buf)))
-        buf++;
-    *buf=0;
-    *http_request=buf+1;
-    return url;
-}
-
-
-/* Split the url into path and query
- * Check if exist query in the url
- */
-int SpliteUrl(char *url ,char * url_path,char * url_query)
-{
-
-    char *path=url;
-    while(*path&&isspace(*path))
-        path++;
-    char *query=url;
-    while(*query&&*query!='?')
-        query++;
-    int is_exist_query=0;
-    if(*query=='?')
-        is_exist_query=1;
-    *query='\0';
-    sprintf(url_path,"hdoc%s",path);
-    if(is_exist_query)
-    {
-        query++;
-        strcpy(url_query,query);
-    }
-    else
-        url_query[0]='\0';
-    size_t len=strlen(url_path);
-    if(len>0&&url_path[len-1]=='/')
-        strcat(url_path,"index.html");
-    return is_exist_query;
-}
 
 int FindFile(const char * file_path)
 {
@@ -127,51 +64,9 @@ int FindFile(const char * file_path)
 
 }
 
+
 void * StarServer(void * client)
 {
-    /*
-    char http_request[8192];
-    char url_path[512];
-    char url_query[512];
-    int client_socket=*(int*)client;
-    ssize_t http_status;
-    if((http_status=GetRequest(client_socket,http_request,4096))<0)
-    {
-        if(http_status==-1)
-            ReturnError(400,client_socket);
-        if(http_status==-2)
-            ReturnError(414,client_socket);
-    }
-    else
-    {
-        char *http_request_buf = http_request;
-
-        char *http_request_method = GetRequestMethod(&http_request_buf);
-        char *http_request_url = GetRequestUrl(&http_request_buf);
-        memset(url_path,0,sizeof(url_path));
-        memset(url_query,0,sizeof(url_query));
-        if(SpliteUrl(http_request_url,url_path,url_query))
-            printf("%s\n",url_query);
-        printf("%s\n",url_path);
-        if(strcasecmp(http_request_method,"GET")==0)
-        {
-
-
-        }
-        else if(strcasecmp(http_request_method,"POST")==0)
-        {
-
-
-        }
-        else
-            ReturnError(302,client_socket);
-
-
-    }
-    ReturnError(404,client_socket);
-    close(client_socket);
-    return NULL;
-     */
     http_request * request = CreateRequest();
 
     int client_socket = *(int *)client;
@@ -195,11 +90,11 @@ void * StarServer(void * client)
     return NULL;
 }
 
+
 int main(int argc,char * argv[])
 {
     int server_socket=-1;
     int server_port=0;
-
 
     if(argc==2)
         server_port=atoi(argv[1]);
@@ -218,9 +113,8 @@ int main(int argc,char * argv[])
         if(client_socket==-1)
             perror("Accept Failed\n");
         pthread_t thread_id;
-       if(pthread_create(&thread_id,NULL,StarServer,(void*) &client_socket)!=0)
+        if(pthread_create(&thread_id,NULL,StarServer,(void*) &client_socket)!=0)
            perror("Thread Create Failed\n");
-
     }
     close(server_port);
 }

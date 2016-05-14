@@ -9,16 +9,16 @@
 //const int PORT_MAX_LENGHT = 10;
 //const int RESOURCE_PATH_MAX_LENGTH = 100;
 //const int
+
 const unsigned int HTTP_REQUEST_LINE_MAX_COUNT = 10;
 const unsigned int HTTP_REQUEST_BUF_MAX_LENGTH = 8192;
 struct http_request_url
 {
     char *scheme;
-    char *address;
+    char *host;
     char *port;
     char *path;
     char *query_str;
-    char *fragment;
 };
 struct http_request_head
 {
@@ -65,5 +65,17 @@ int GetVersion(http_request *request, char *buf);
 int EndHead(http_request *request, char *buf);
 
 void RequestDebug(http_request *request);
+
+int GetPath(http_request *request, char *buf);
+
+int GetScheme(http_request *request, char *buf);
+
+int GetHost(http_request *request, char *buf);
+
+int GetPort(http_request *request, char *buf);
+
+int GetQueryStr(http_request *request, char *buf);
+
+int SpaceBeforeVersion(http_request *request, char *buf);
 
 #endif //HTTPSERVER_HTTPHEADHANDLER_H
