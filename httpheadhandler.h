@@ -48,7 +48,7 @@ int End(http_request * request, char *buf);
 
 int NextLine(http_request * request, char *buf);
 
-int HandleRequest(http_request *request, char * buf);
+int HandleRequest(http_request *request);
 
 int GetMethod(http_request * request, char * buf);
 
@@ -63,5 +63,7 @@ int GetLine(http_request *request, char *buf);
 int GetVersion(http_request *request, char *buf);
 
 int EndHead(http_request *request, char *buf);
+
+void RequestDebug(http_request *request);
 
 #endif //HTTPSERVER_HTTPHEADHANDLER_H

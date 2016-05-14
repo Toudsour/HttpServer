@@ -31,7 +31,7 @@ http_request* CreateRequest()
 {
     http_request *newrequest = (http_request *)malloc(sizeof(http_request));
 
-    if(newrequest != NULL)
+    if(newrequest == NULL)
         Error("Can't malloc request!\n");
 
     memset(newrequest,0,sizeof(http_request));
@@ -53,8 +53,9 @@ void DestroyRequest(http_request *request)
 }
 
 
-int HandleRequest(http_request *request, char *buf)
+int HandleRequest(http_request *request)
 {
+    char *buf = request->buf;
     if(IsUpperAlphabet(*buf)||*buf == '_')
         return GetMethod(request, buf);
     else
@@ -82,14 +83,16 @@ int GetMethod(http_request *request, char *buf)
 int GetUrl(http_request *request,char *buf)
 {
     char * url = buf;
-    while(*buf && *buf != ' ' && *buf != '\r' && *buf != '\n')
+    while(*buf && (*buf != ' ') && !IsEnd(*buf))
         buf++;
 
-    if(* buf != ' ')
+    if(*buf != ' ')
         return 400;
-    buf = 0;
 
+    *buf = 0;
     buf++;
+
+    printf("%s\n",url);
 
     return GetVersion(request, buf);
 }
@@ -97,9 +100,11 @@ int GetUrl(http_request *request,char *buf)
 
 int GetVersion(http_request *request, char *buf)
 {
-    char * version = buf;
+    char *version = buf;
+
     if(IsEnd(*buf))
         return EndHead(request,buf);
+
     if(*buf != 'H')
         return 400;
     buf++;
@@ -116,23 +121,30 @@ int GetVersion(http_request *request, char *buf)
         return 400;
     buf++;
 
+    if(*buf != '/')
+        return 400;
+    buf++;
+
     if(!IsNumber(*buf))
         return 400;
     buf++;
 
     if(*buf != '.')
         return 400;
+    buf++;
 
     if(!IsNumber(*buf))
         return 400;
     buf++;
+
+    request->head.version = version;
 
     if(*buf == ' ')
     {
         *buf = 0;
         buf++;
     }
-    request->head.version = version;
+
 
     if(IsEnd(*buf))
         return EndHead(request, buf);
@@ -163,6 +175,7 @@ int GetLine(http_request *request, char *buf)
 {
     if(IsEnd(*buf))
         return End(request, buf);
+
     return GetLineName(request, buf);
 }
 
@@ -177,9 +190,14 @@ int GetLineName(http_request *request,char *buf)
     if(!(*buf))
         return 400;
 
+    *buf = 0;
+
     buf++;
-    if(*buf != '\n')
+    if(*buf != ' ')
         return 400;
+
+    *buf = 0;
+    buf++;
 
     return GetLineContent(request, buf);
 
@@ -236,4 +254,43 @@ int End(http_request *request, char *buf)
     buf++;
 
     return 0;
+}
+
+void RequestDebug(http_request *request)
+{
+    if(request == NULL)
+    {
+        printf("Request is NULL\n");
+        return;
+    }
+    if(request->buf)
+        printf("%s\n",request->buf);
+    else
+        printf("BUF is NULL\n");
+
+    if(request->head.method)
+        printf("Method:%s\n",request->head.method);
+    else
+        printf("Method is NULL\n");
+
+    if(request->head.version)
+        printf("Version:%s\n",request->head.version);
+    else
+        printf("Version is NULL\n");
+
+    printf("Line Count:%d\n",request->line_count);
+
+    for(int i = 0; i < request->line_count; i++)
+    {
+        if(request->line[i].name)
+            printf("Line Name:%s\n",request->line[i].name);
+        else
+            printf("Line Name is NULL\n");
+
+        if(request->line[i].content)
+            printf("Line Content:%s\n",request->line[i].content);
+        else
+            printf("Line Content is NULL\n");
+    }
+
 }

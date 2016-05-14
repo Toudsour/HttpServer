@@ -10,7 +10,7 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include "errorhandler.h"
-
+#include "httpheadhandler.h"
 
 
 int CreateServer(int& host)
@@ -45,7 +45,7 @@ int CreateServer(int& host)
 
 
 
-ssize_t GetRequest(int client_socket, char * buf,size_t max_len)
+int  GetRequest(int client_socket, char * buf,size_t max_len)
 {
     ssize_t num_bytes=0;
     ssize_t num_bytes_recv=0;
@@ -59,8 +59,8 @@ ssize_t GetRequest(int client_socket, char * buf,size_t max_len)
             return -2;
     }
     buf[num_bytes_recv]='\0';
-    printf("%s",buf);
-    return num_bytes_recv;
+    //printf("%s",buf);
+    return 0;
 }
 
 
@@ -129,6 +129,7 @@ int FindFile(const char * file_path)
 
 void * StarServer(void * client)
 {
+    /*
     char http_request[8192];
     char url_path[512];
     char url_query[512];
@@ -166,6 +167,28 @@ void * StarServer(void * client)
             ReturnError(302,client_socket);
 
 
+    }
+    ReturnError(404,client_socket);
+    close(client_socket);
+    return NULL;
+     */
+    http_request * request = CreateRequest();
+
+    int client_socket = *(int *)client;
+
+    int server_status = GetRequest(client_socket, request->buf, HTTP_REQUEST_BUF_MAX_LENGTH);
+
+    if(server_status)
+    {
+        if(server_status==-1)
+            ReturnError(400,client_socket);
+        if(server_status==-2)
+            ReturnError(414,client_socket);
+    }
+    else
+    {
+        HandleRequest(request);
+        RequestDebug(request);
     }
     ReturnError(404,client_socket);
     close(client_socket);
