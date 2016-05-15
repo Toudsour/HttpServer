@@ -12,6 +12,8 @@
 
 const unsigned int HTTP_REQUEST_LINE_MAX_COUNT = 10;
 const unsigned int HTTP_REQUEST_BUF_MAX_LENGTH = 8192;
+
+extern char default_version[];
 struct http_request_url
 {
     char *scheme;
@@ -48,7 +50,7 @@ int End(http_request * request, char *buf);
 
 int NextLine(http_request * request, char *buf);
 
-int HandleRequest(http_request *request);
+int AnalysisRequest(http_request *request);
 
 int GetMethod(http_request * request, char * buf);
 

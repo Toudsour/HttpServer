@@ -8,6 +8,7 @@
 #include "httpheadhandler.h"
 #include "errorhandler.h"
 
+char default_version[] = "HTTP/0.9";
 
 static bool IsUpperAlphabet(char c)
 {
@@ -88,7 +89,7 @@ void DestroyRequest(http_request *request)
 }
 
 
-int HandleRequest(http_request *request)
+int AnalysisRequest(http_request *request)
 {
     char *buf = request->buf;
     if(IsUpperAlphabet(*buf)||*buf == '_')
@@ -183,7 +184,8 @@ int SpaceBeforeVersion(http_request *request, char *buf)
 
     if(IsEnd(*buf))
     {
-        request->head.version = "HTTP/0.9";
+
+        request->head.version = default_version;
         return EndHead(request, buf);
     }
 

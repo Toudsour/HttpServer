@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include "errorhandler.h"
 #include "httpheadhandler.h"
+#include "sendpage.h"
 
 
 int CreateServer(int& host)
@@ -69,12 +70,6 @@ int  GetRequest(int client_socket, char * buf,size_t max_len)
 }
 
 
-int FindFile(const char * file_path)
-{
-
-
-}
-
 
 void * StarServer(void * client)
 {
@@ -93,10 +88,16 @@ void * StarServer(void * client)
     }
     else
     {
-        HandleRequest(request);
+        int analysis_status = 0;
+        analysis_status = AnalysisRequest(request);
+
+        if(analysis_status)
+            ReturnError(analysis_status, client_socket);
+        else
+            HandleRequest(client_socket, request);
         //RequestDebug(request);
     }
-    ReturnError(404,client_socket);
+    //ReturnError(404,client_socket);
     close(client_socket);
     return NULL;
 }
@@ -119,6 +120,8 @@ int main(int argc, char *argv[])
     struct sockaddr_in client_info;
 
     socklen_t client_info_len = sizeof(client_info);
+
+    ChangeRoot();
 
     //get client accept
     while((client_socket = accept(server_socket,(sockaddr*)&client_info,&client_info_len)) != -1)
