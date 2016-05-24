@@ -21,6 +21,12 @@ int IsFile(char *);
 
 void HandleRequest(int socket_client, http_request *request);
 
-void SendPage(int socket_client, char * file);
+void SendFile(int socket_client, FILE *file_handle);
+
+int IsFile(char *file_name);
+
+void SendHead(int socket_client, int status_code, long file_length);
+
+void SendPage(int client_socket, http_request *file);
 
 #endif //HTTPSERVER_SENDPAGE_H

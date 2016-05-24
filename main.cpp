@@ -7,7 +7,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <pthread.h>
-#include <sys/wait.h>
+
 #include <stdlib.h>
 #include "errorhandler.h"
 #include "httpheadhandler.h"
@@ -47,7 +47,7 @@ int CreateServer(int& host)
 }
 
 
-int  GetRequest(int client_socket, char * buf,size_t max_len)
+int  GetContent(int client_socket, char * buf,size_t max_len)
 {
     ssize_t num_bytes = 0;
     ssize_t num_bytes_recv = 0;
@@ -64,20 +64,19 @@ int  GetRequest(int client_socket, char * buf,size_t max_len)
 
     buf[num_bytes_recv] = '\0';
 
-    //printf("%s", buf);
-
     return 0;
 }
-
 
 
 void * StarServer(void * client)
 {
     http_request * request = CreateRequest();
 
-    int client_socket = *(int *)client;
+    int client_socket;
+    client_socket = *(int *)client;
 
-    int server_status = GetRequest(client_socket, request->buf, HTTP_REQUEST_BUF_MAX_LENGTH);
+    int server_status;
+    server_status = GetContent(client_socket, request->buf, HTTP_REQUEST_BUF_MAX_LENGTH);
 
     if(server_status)
     {
@@ -95,10 +94,10 @@ void * StarServer(void * client)
             ReturnError(analysis_status, client_socket);
         else
             HandleRequest(client_socket, request);
-        //RequestDebug(request);
     }
-    //ReturnError(404,client_socket);
+    DestroyRequest(request);
     close(client_socket);
+
     return NULL;
 }
 
@@ -134,5 +133,6 @@ int main(int argc, char *argv[])
         if(pthread_create(&thread_id,NULL,StarServer,(void*) &client_socket) != 0)
             Error("Thread Create Failed\n");
     }
+    printf("Http Server End\n");
     close(server_port);
 }

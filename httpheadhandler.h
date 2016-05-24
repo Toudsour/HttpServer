@@ -37,9 +37,11 @@ struct http_request_line
 struct http_request
 {
     char * buf;
+    char * end;
     http_request_head head;
     int line_count;
     http_request_line line[HTTP_REQUEST_LINE_MAX_COUNT];
+    char *content;
 };
 
 http_request* CreateRequest();

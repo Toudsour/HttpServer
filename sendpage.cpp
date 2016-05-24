@@ -13,10 +13,10 @@
 #include "httpheadhandler.h"
 #include "errorhandler.h"
 #include "sendpage.h"
+#include "executecgi.h"
 
 
-
-static void GetDir(char *dir)
+void GetDir(char *dir)
 {
     memset(dir,0,MAX_DIR_LENGTH);
     getcwd(dir,MAX_DIR_LENGTH);
@@ -109,8 +109,6 @@ void SendFile(int socket_client, FILE *file_handle)
 
     fseek(file_handle, 0, SEEK_SET);
 
-    size_t num_of_bytes = 0;
-
     while(!feof(file_handle))
     {
         fread(buf, 1, MAX_BUF_SIZE, file_handle);
@@ -119,14 +117,21 @@ void SendFile(int socket_client, FILE *file_handle)
     }
 
 }
-void SendPage(int socket_client, char * file_name)
+void SendPage(int client_socket,http_request *request)
 {
 
+    char file_name[MAX_DIR_LENGTH];
+
+    GetDir(file_name);
+
+    sprintf(file_name + strlen(file_name), "/%s%s", SOURCE_ROOT, request->head.url.path);
+
+    printf("%s\n",file_name);
     int file_state = IsFile(file_name);
 
     if(file_state)
     {
-        ReturnError(file_state, socket_client);
+        ReturnError(file_state, client_socket);
         return;
     }
 
@@ -137,9 +142,9 @@ void SendPage(int socket_client, char * file_name)
     if(file_handle == NULL)
         return ;
 
-    SendHead(socket_client, 200, GetFileLen(file_handle));
+    SendHead(client_socket, 200, GetFileLen(file_handle));
 
-    SendFile(socket_client, file_handle);
+    SendFile(client_socket, file_handle);
 
     fclose(file_handle);
 
@@ -148,29 +153,22 @@ void SendPage(int socket_client, char * file_name)
 
 void HandleRequest(int socket_client, http_request *request)
 {
-    /*
-    if(request->head.url.query_str)
+
+
+    if(!strcasecmp(request->head.method,"GET"))
     {
-        sprintf(file_name, "%s%s", EXCELROOT, request->head.url.path);
+
+        if(request->head.url.query_str == NULL)
+            SendPage(socket_client, request);
+        else
+        {
+            HandlePost(socket_client, request);
+        }
+    }
+    else if(!strcasecmp(request->head.method, "POST"))
+    {
+        HandlePost(socket_client, request);
     }
     else
-    {
-        int file_state;
-        ;
-
-        if((file_state = IsFile(file_name)))
-            ReturnError(file_state,socket_client);
-        else
-            SendPage(socket_client, file_name);
-    }
-     */
-    char file_name[MAX_DIR_LENGTH];
-
-    GetDir(file_name);
-
-    sprintf(file_name+strlen(file_name), "/%s%s", SOURCE_ROOT, request->head.url.path);
-
-    printf("%s\n",file_name);
-
-    SendPage(socket_client, file_name);
+        ReturnError(400, socket_client);
 }

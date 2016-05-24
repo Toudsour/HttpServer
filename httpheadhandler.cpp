@@ -67,7 +67,7 @@ http_request* CreateRequest()
 {
     http_request *newrequest = (http_request *)malloc(sizeof(http_request));
 
-    if(newrequest == NULL)
+    if(!newrequest)
         Error("Can't malloc request!\n");
 
     memset(newrequest,0,sizeof(http_request));
@@ -83,7 +83,11 @@ void DestroyRequest(http_request *request)
     if(request == NULL)
         return;
 
-    free(request->buf);
+    if(request->buf)
+        free(request->buf);
+
+    if(request->content)
+        free(request->content);
 
     free(request);
 }
@@ -92,6 +96,7 @@ void DestroyRequest(http_request *request)
 int AnalysisRequest(http_request *request)
 {
     char *buf = request->buf;
+
     if(IsUpperAlphabet(*buf)||*buf == '_')
         return GetMethod(request, buf);
     else
@@ -442,6 +447,8 @@ int End(http_request *request, char *buf)
     *buf=0;
     buf++;
 
+    request->end = buf;
+
     return 0;
 }
 
@@ -483,6 +490,7 @@ void RequestDebug(http_request *request)
         printf("Request is NULL\n");
         return;
     }
+
     if(request->buf)
         printf("%s\n",request->buf);
     else
